@@ -61,9 +61,9 @@ def read_record(record_file):
         while(True):
             (image, image_format, height, width,
              xmin, xmax, ymin, ymax, label) = next_element
-            yield (image, image_format.numpy().decode('ascii'), height,
-                    width, xmin, xmax, ymin, ymax,
-                    label)
+            yield (image.numpy(), image_format.numpy().decode('ascii'), height.numpy(),
+                    width.numpy(), xmin.numpy(), xmax.numpy(), ymin.numpy(), ymax.numpy(),
+                    label.numpy())
     except tf.errors.OutOfRangeError:
         pass
 
