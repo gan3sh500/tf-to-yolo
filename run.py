@@ -27,19 +27,18 @@ def edit_lines(file_name, line_no, new_line, new_file_name):
 
 
 def parse_func(serialized_example):
-    features = tf.parse_single_example(serialized_example,
+    features = tf.io.parse_single_example(serialized_example,
                                        features={
-                        'image/height': tf.FixedLenFeature([], tf.int64),
-                        'image/width': tf.FixedLenFeature([], tf.int64),
-                        'image/source_id': tf.FixedLenFeature([], tf.string),
-                        'image/encoded': tf.FixedLenFeature([], tf.string),
-                        'image/format': tf.FixedLenFeature([], tf.string),
-                        'image/object/bbox/xmin': tf.VarLenFeature(tf.float32),
-                        'image/object/bbox/xmax': tf.VarLenFeature(tf.float32),
-                        'image/object/bbox/ymin': tf.VarLenFeature(tf.float32),
-                        'image/object/bbox/ymax': tf.VarLenFeature(tf.float32),
-                        'image/object/class/text': tf.VarLenFeature(tf.string),
-                        'image/object/class/label': tf.VarLenFeature(tf.int64)
+                        'image/height': tf.io.FixedLenFeature([], tf.int64),
+                        'image/width': tf.io.FixedLenFeature([], tf.int64),
+                        'image/encoded': tf.io.FixedLenFeature([], tf.string),
+                        'image/format': tf.io.FixedLenFeature([], tf.string),
+                        'image/object/bbox/xmin': tf.io.VarLenFeature(tf.float32),
+                        'image/object/bbox/xmax': tf.io.VarLenFeature(tf.float32),
+                        'image/object/bbox/ymin': tf.io.VarLenFeature(tf.float32),
+                        'image/object/bbox/ymax': tf.io.VarLenFeature(tf.float32),
+                        'image/object/class/text': tf.io.VarLenFeature(tf.string),
+                        'image/object/class/label': tf.io.VarLenFeature(tf.int64)
     })
     image = features['image/encoded']
     image_format = features['image/format']
@@ -56,18 +55,17 @@ def parse_func(serialized_example):
 def read_record(record_file):
     dataset = tf.data.TFRecordDataset([record_file])
     dataset = dataset.map(parse_func)
-    iterator = dataset.make_one_shot_iterator()
-    next_element = iterator.get_next()
-    with tf.Session() as sess:
-        try:
-            while(True):
-                (image, image_format, height, width,
-                 xmin, xmax, ymin, ymax, label) = sess.run(next_element)
-                yield (image, image_format.decode('ascii'), height,
-                       width, xmin, xmax, ymin, ymax,
-                       label)
-        except tf.errors.OutOfRangeError:
-            pass
+    iterator = dataset.__iter__()
+    next_element = next(iterator)
+    try:
+        while(True):
+            (image, image_format, height, width,
+             xmin, xmax, ymin, ymax, label) = next_element
+            yield (image, image_format.numpy().decode('ascii'), height,
+                    width, xmin, xmax, ymin, ymax,
+                    label)
+    except tf.errors.OutOfRangeError:
+        pass
 
 
 def make_train_val(train_records, val_records, images_dir,
