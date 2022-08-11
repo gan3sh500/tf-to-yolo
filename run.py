@@ -56,16 +56,11 @@ def read_record(record_file):
     dataset = tf.data.TFRecordDataset([record_file])
     dataset = dataset.map(parse_func)
     iterator = dataset.__iter__()
-    next_element = next(iterator)
-    try:
-        while(True):
-            (image, image_format, height, width,
-             xmin, xmax, ymin, ymax, label) = next_element
-            yield (image.numpy(), image_format.numpy().decode('ascii'), height.numpy(),
-                    width.numpy(), xmin.numpy(), xmax.numpy(), ymin.numpy(), ymax.numpy(),
-                    label.numpy())
-    except tf.errors.OutOfRangeError:
-        pass
+    for item in iterator:
+        (image, image_format, height, width, xmin, xmax, ymin, ymax, label) = item
+        yield (image.numpy(), image_format.numpy().decode('ascii'), height.numpy(),
+                width.numpy(), xmin.numpy(), xmax.numpy(), ymin.numpy(), ymax.numpy(),
+                label.numpy())
 
 
 def make_train_val(train_records, val_records, images_dir,
